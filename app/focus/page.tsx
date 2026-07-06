@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Play, Square, X, Loader2, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { logStudySession } from '@/app/actions/tasks';
 import { toast } from 'sonner';
 
-export default function FocusBrain() {
+function FocusBrainContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const skillId = searchParams.get('skillId') || undefined;
@@ -151,5 +151,17 @@ export default function FocusBrain() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FocusBrain() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+      </div>
+    }>
+      <FocusBrainContent />
+    </Suspense>
   );
 }
