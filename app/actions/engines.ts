@@ -8,29 +8,47 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const USER_ID = '5ab9ee3e-4bfc-4e51-8935-cbb926668752';
 
+// Helper to get dynamic skill hours
+async function getDynamicSkillHours() {
+  const { data: skills } = await supabase.from('skills').select('id, name, target_hours').eq('user_id', USER_ID);
+  const { data: sessions } = await supabase.from('study_sessions').select('skill_id, duration_minutes').eq('user_id', USER_ID).not('skill_id', 'is', null);
+  
+  const skillHours: Record<string, number> = {};
+  if (skills && sessions) {
+    skills.forEach((s: any) => {
+      const mins = sessions.filter((sess: any) => sess.skill_id === s.id).reduce((sum: number, curr: any) => sum + curr.duration_minutes, 0);
+      skillHours[s.id] = mins / 60;
+    });
+  }
+  return { skills: skills || [], skillHours };
+}
+
 export async function calculateCompanyReadiness(companyName: string) {
   try {
     const { data: companyReqs } = await supabase
       .from('company_requirements')
-      .select('weight_percentage, skills(name, logged_hours, target_hours)')
+      .select('weight_percentage, skills(id, name, target_hours)')
       .eq('user_id', USER_ID)
       .eq('company_name', companyName);
 
     if (!companyReqs || companyReqs.length === 0) return 0;
+
+    const { skillHours } = await getDynamicSkillHours();
 
     let totalScore = 0;
     for (const req of companyReqs) {
       const skill = req.skills as any;
       if (!skill || !skill.target_hours) continue;
       
-      const skillMastery = Math.min(100, (skill.logged_hours / skill.target_hours) * 100);
+      const logged = skillHours[skill.id] || 0;
+      const skillMastery = Math.min(100, (logged / skill.target_hours) * 100);
       const weightedContribution = (skillMastery * req.weight_percentage) / 100;
       totalScore += weightedContribution;
     }
 
     return Math.round(totalScore);
   } catch (err) {
-    return 0; // Failsafe during setup
+    return 0; 
   }
 }
 
@@ -38,10 +56,12 @@ export async function getDreamCompanies() {
   const companies = ['Google', 'Amazon', 'Microsoft', 'Meta'];
   const results = [];
   
+  const { skillHours } = await getDynamicSkillHours();
+
   for (const company of companies) {
     const { data: companyReqs } = await supabase
       .from('company_requirements')
-      .select('weight_percentage, skills(name, logged_hours, target_hours)')
+      .select('weight_percentage, skills(id, name, target_hours)')
       .eq('user_id', USER_ID)
       .eq('company_name', company);
 
@@ -57,7 +77,9 @@ export async function getDreamCompanies() {
         const skill = req.skills as any;
         if (!skill || !skill.target_hours) continue;
         
-        const skillMastery = Math.min(100, (skill.logged_hours / skill.target_hours) * 100);
+        const logged = skillHours[skill.id] || 0;
+        const skillMastery = Math.min(100, (logged / skill.target_hours) * 100);
+        
         if (skillMastery < lowestMastery) {
           lowestMastery = skillMastery;
           lowestSkill = skill.name;
@@ -72,9 +94,6 @@ export async function getDreamCompanies() {
       } else {
          insight = '"All core requirements are currently optimal."';
       }
-    } else {
-       // If no reqs, calculate readiness is 0 anyway
-       readiness = 0;
     }
 
     results.push({ name: company, readiness, insight });
@@ -85,21 +104,21 @@ export async function getDreamCompanies() {
 
 export async function calculateAIEngineerScore() {
   try {
-    const { data: skills } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('user_id', USER_ID);
-
-    if (!skills || skills.length === 0) return 0;
+    const { skills, skillHours } = await getDynamicSkillHours();
+    if (skills.length === 0) return 0;
 
     let totalMastery = 0;
+    let validSkills = 0;
+    
     for (const skill of skills) {
       if(skill.target_hours) {
-         totalMastery += Math.min(100, (skill.logged_hours / skill.target_hours) * 100);
+         const logged = skillHours[skill.id] || 0;
+         totalMastery += Math.min(100, (logged / skill.target_hours) * 100);
+         validSkills++;
       }
     }
 
-    return Math.round(totalMastery / skills.length);
+    return validSkills > 0 ? Math.round(totalMastery / validSkills) : 0;
   } catch (err) {
     return 0;
   }
@@ -344,15 +363,26 @@ export async function getFAANGPillars() {
   try {
     const { data: skills, error } = await supabase
       .from('skills')
-      .select('id, name, logged_hours, target_hours')
+      .select('id, name, target_hours')
       .eq('user_id', USER_ID);
 
     if (error || !skills || skills.length === 0) {
       return [];
     }
 
+    // Fetch all study sessions for these skills
+    const { data: sessions } = await supabase
+      .from('study_sessions')
+      .select('skill_id, duration_minutes')
+      .eq('user_id', USER_ID)
+      .not('skill_id', 'is', null);
+
     return skills.map((s: any) => {
-      const logged = s.logged_hours || 0;
+      // Sum all minutes for this skill
+      const skillSessions = sessions?.filter((session: any) => session.skill_id === s.id) || [];
+      const totalMinutes = skillSessions.reduce((acc: number, curr: any) => acc + curr.duration_minutes, 0);
+      
+      const logged = totalMinutes / 60; // Now we get exact decimals!
       const target = s.target_hours || 100;
       const rawReadiness = Math.min(100, (logged / target) * 100);
       
@@ -360,7 +390,7 @@ export async function getFAANGPillars() {
         id: s.id,
         name: s.name,
         type: s.name, 
-        hours: logged,
+        hours: Number(logged.toFixed(1)),
         target: target,
         description: `Target: ${target} hours`,
         readiness: Number(rawReadiness.toFixed(1))

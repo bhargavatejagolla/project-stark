@@ -60,10 +60,13 @@ export async function getCourseAnalytics(days: number = 90) {
       });
     }
 
+    const totalSkillMinutes = skillSessions.reduce((sum, s) => sum + s.duration_minutes, 0);
+    const dynamicLoggedHours = Number((totalSkillMinutes / 60).toFixed(1));
+
     return {
       id: skill.id,
       name: skill.name,
-      logged_hours: skill.logged_hours || 0,
+      logged_hours: dynamicLoggedHours,
       target_hours: skill.target_hours || 100,
       grid
     };
