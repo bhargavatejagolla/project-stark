@@ -5,6 +5,7 @@ import { EmergencyToggle } from '@/components/dashboard/EmergencyToggle';
 import { SystemStatusHUD } from '@/components/modules/SystemStatusHUD';
 import { EmbeddedTerminal } from '@/components/dashboard/EmbeddedTerminal';
 import { TaskList } from '@/components/dashboard/TaskList';
+import { ContributionHeatmap } from '@/components/dashboard/ContributionHeatmap';
 import { Play, AlertTriangle, Zap, CheckCircle2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -118,30 +119,8 @@ export default async function Home() {
 
           <EmbeddedTerminal />
 
-          {/* Deep Work Consistency Grid */}
-          <div className="pt-8">
-            <h3 className="text-[10px] font-black tracking-[0.2em] text-gray-500 uppercase mb-6">30-Day Global Matrix</h3>
-            <div className="flex gap-2 w-full max-w-full overflow-x-auto pb-4 hide-scrollbar">
-              {consistencyGrid.map((day: any, i: number) => {
-                let bgClass = "bg-white/5 border-white/5";
-                if (day.intensity === 1) bgClass = "bg-emerald-500/20 border-emerald-500/20";
-                if (day.intensity === 2) bgClass = "bg-emerald-500/40 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.3)]";
-                if (day.intensity === 3) bgClass = "bg-emerald-500/70 border-emerald-500/70 shadow-[0_0_15px_rgba(16,185,129,0.5)]";
-                if (day.intensity === 4) bgClass = "bg-emerald-400 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.8)]";
-
-                return (
-                  <div 
-                    key={i} 
-                    className={`h-12 w-12 shrink-0 rounded-lg border ${bgClass} transition-all duration-300 hover:scale-110 flex items-center justify-center group/tooltip relative cursor-crosshair`}
-                  >
-                    <div className="opacity-0 group-hover/tooltip:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[9px] font-mono py-1 px-3 rounded pointer-events-none whitespace-nowrap z-50 border border-white/10 transition-opacity">
-                      {day.minutes > 0 ? `${day.minutes} min` : 'No Activity'}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* Deep Work Consistency Grid (365 Day Heatmap) */}
+          <ContributionHeatmap grid={consistencyGrid} />
           
         </div>
 

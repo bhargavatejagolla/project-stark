@@ -313,19 +313,19 @@ export async function calculateSystemState() {
   }
 }
 
-export async function getConsistencyGrid() {
+export async function getConsistencyGrid(days: number = 365) {
   try {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 30);
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    const pastDate = new Date();
+    pastDate.setDate(today.getDate() - days);
+    pastDate.setHours(0, 0, 0, 0);
 
     const { data: sessions } = await supabase
       .from('study_sessions')
       .select('ended_at, duration_minutes')
       .eq('user_id', USER_ID)
-      .gte('ended_at', thirtyDaysAgo.toISOString())
+      .gte('ended_at', pastDate.toISOString())
       .lte('ended_at', today.toISOString());
 
     const grid = [];
@@ -338,7 +338,7 @@ export async function getConsistencyGrid() {
       });
     }
 
-    for (let i = 29; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
@@ -350,7 +350,10 @@ export async function getConsistencyGrid() {
       else if (minutes >= 30 && minutes < 60) intensity = 3;
       else if (minutes >= 60) intensity = 4;
 
-      grid.push({ date: dateStr, minutes, intensity });
+      // Calculate day of week (0-6)
+      const dayOfWeek = d.getDay();
+
+      grid.push({ date: dateStr, minutes, intensity, dayOfWeek });
     }
 
     return grid;
