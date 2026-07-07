@@ -326,10 +326,10 @@ export async function getConsistencyGrid() {
       const minutes = sessionMap.get(dateStr) || 0;
       
       let intensity = 0;
-      if (minutes > 0 && minutes <= 30) intensity = 1;
-      else if (minutes > 30 && minutes <= 90) intensity = 2;
-      else if (minutes > 90 && minutes <= 180) intensity = 3;
-      else if (minutes > 180) intensity = 4;
+      if (minutes > 0 && minutes < 15) intensity = 1;
+      else if (minutes >= 15 && minutes < 30) intensity = 2;
+      else if (minutes >= 30 && minutes < 60) intensity = 3;
+      else if (minutes >= 60) intensity = 4;
 
       grid.push({ date: dateStr, minutes, intensity });
     }

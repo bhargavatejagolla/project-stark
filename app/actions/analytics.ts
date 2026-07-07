@@ -49,9 +49,9 @@ export async function getCourseAnalytics(days: number = 90) {
       
       let intensity = 0;
       if (totalMinutes > 0) intensity = 1;
-      if (totalMinutes >= 30) intensity = 2;
-      if (totalMinutes >= 60) intensity = 3;
-      if (totalMinutes >= 120) intensity = 4;
+      if (totalMinutes >= 15) intensity = 2;
+      if (totalMinutes >= 30) intensity = 3;
+      if (totalMinutes >= 60) intensity = 4;
       
       grid.push({
         date: dateStr,

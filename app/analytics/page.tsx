@@ -2,8 +2,9 @@ import { getCourseAnalytics } from '@/app/actions/analytics';
 import { Activity, Flame, Clock, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function AnalyticsPage({ searchParams }: { searchParams: { days?: string } }) {
-  const days = parseInt(searchParams.days || '90');
+export default async function AnalyticsPage(props: { searchParams: Promise<{ days?: string }> }) {
+  const resolvedSearchParams = await props.searchParams;
+  const days = parseInt(resolvedSearchParams.days || '90');
   const analytics = await getCourseAnalytics(days);
 
   return (
