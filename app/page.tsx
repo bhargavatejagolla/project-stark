@@ -1,8 +1,10 @@
 import { calculateStreak, calculateMissionDay, calculateEnergy, calculateSystemState, getConsistencyGrid, getDailyDirective } from '@/app/actions/engines';
+import { getTodayTasks } from '@/app/actions/tasks';
 import { JarvisCommand } from '@/components/dashboard/JarvisCommand';
 import { EmergencyToggle } from '@/components/dashboard/EmergencyToggle';
 import { SystemStatusHUD } from '@/components/modules/SystemStatusHUD';
 import { EmbeddedTerminal } from '@/components/dashboard/EmbeddedTerminal';
+import { TaskList } from '@/components/dashboard/TaskList';
 import { Play, AlertTriangle, Zap, CheckCircle2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,6 +15,7 @@ export default async function Home() {
   const systemState = await calculateSystemState();
   const consistencyGrid = await getConsistencyGrid();
   const directive = await getDailyDirective();
+  const tasks = await getTodayTasks();
   
   return (
     <main className="min-h-screen w-full relative overflow-hidden text-white flex flex-col p-8 lg:p-12 animate-in fade-in duration-700">
@@ -145,6 +148,7 @@ export default async function Home() {
         {/* Right Column (Modules) */}
         <div className="lg:col-span-1 flex flex-col gap-6">
            <SystemStatusHUD streak={streak} energy={energy} />
+           <TaskList initialTasks={tasks} />
         </div>
       </div>
 

@@ -22,6 +22,21 @@ export async function getTodayTasks() {
   return data;
 }
 
+export async function addTask(title: string) {
+  if (!title.trim()) return;
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { error } = await supabase.from('tasks').insert({
+    user_id: USER_ID,
+    title,
+    status: 'pending',
+    estimated_minutes: 30,
+    due_date: today
+  });
+
+  if (!error) revalidatePath('/');
+}
+
 export async function updateTaskStatus(taskId: string, status: string) {
   const { error } = await supabase
     .from('tasks')
