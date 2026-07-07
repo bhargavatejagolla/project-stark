@@ -98,7 +98,7 @@ export default async function Home() {
                   <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-emerald-500 shadow-[0_0_15px_#10b981] transition-all duration-1000"
-                      style={{ width: `${directive.readiness}%` }}
+                      style={{ width: `${directive.readiness > 0 ? Math.max(1, directive.readiness) : 0}%` }}
                     ></div>
                   </div>
                 </div>

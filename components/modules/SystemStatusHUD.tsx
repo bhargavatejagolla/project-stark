@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Activity, Zap, Brain } from 'lucide-react';
+import { Activity, Zap, Brain, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function SystemStatusHUD({ streak = 0, energy = 100 }: { streak?: number, energy?: number }) {
@@ -30,12 +30,16 @@ export function SystemStatusHUD({ streak = 0, energy = 100 }: { streak?: number,
           <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Energy Reserve</p>
         </div>
 
-        <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col gap-2 hover:bg-white/10 transition-colors">
+        <div className={`bg-white/5 border ${streak > 2 ? 'border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.2)]' : 'border-white/5'} rounded-xl p-4 flex flex-col gap-2 hover:bg-white/10 transition-all`}>
           <div className="flex items-center justify-between">
-            <Brain className="h-4 w-4 text-purple-400 drop-shadow-[0_0_5px_#a855f7]" />
-            <span className="text-purple-400 text-xs font-mono font-bold">{streak}d</span>
+            {streak > 2 ? (
+              <Flame className="h-4 w-4 text-orange-400 drop-shadow-[0_0_8px_#f97316] animate-pulse" />
+            ) : (
+              <Brain className="h-4 w-4 text-purple-400 drop-shadow-[0_0_5px_#a855f7]" />
+            )}
+            <span className={`${streak > 2 ? 'text-orange-400' : 'text-purple-400'} text-xs font-mono font-bold`}>{streak}d</span>
           </div>
-          <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Neural Streak</p>
+          <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">{streak > 2 ? 'Blazing Streak' : 'Neural Streak'}</p>
         </div>
 
         <div className="col-span-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 hover:bg-indigo-500/20 transition-all group/insight cursor-default">

@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { calculateStreak, calculateEnergy, getDailyDirective } from '@/app/actions/engines';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 export async function POST(req: Request) {
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ reply: "CRITICAL ERROR: GROQ_API_KEY is missing from Vercel Environment Variables. Cannot establish neural link." });
+    }
+
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const { message } = await req.json();
     const streak = await calculateStreak();
     const energy = await calculateEnergy();
@@ -31,6 +34,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ reply: chatCompletion.choices[0]?.message?.content || "Awaiting input." });
   } catch (error: any) {
     console.error("Groq Terminal error:", error);
-    return NextResponse.json({ reply: "Neural link offline." }, { status: 500 });
+    return NextResponse.json({ reply: `Neural link offline. Diagnostic: ${error.message}` }, { status: 500 });
   }
 }

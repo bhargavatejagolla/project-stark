@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { supabase } from '@/lib/supabase';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const USER_ID = '5ab9ee3e-4bfc-4e51-8935-cbb926668752';
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ success: false, error: "CRITICAL ERROR: GROQ_API_KEY is missing from Vercel Environment Variables. Cannot establish neural link." }, { status: 500 });
+    }
+    
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const { reflection } = await req.json();
 
     const systemPrompt = `You are an elite, ruthless FAANG Career Coach earning 1Cr+. 
@@ -52,11 +56,18 @@ Response Schema:
       due_date: tomorrow.toISOString().split('T')[0]
     });
 
-    if (error) throw error;
+    if (error) {
+      throw new Error(error.message);
+    }
 
-    return NextResponse.json({ success: true, analysis: result.analysis, next_task: result.next_task_title });
+    return NextResponse.json({ 
+      success: true, 
+      analysis: result.analysis,
+      next_task: result.next_task_title 
+    });
+
   } catch (error: any) {
-    console.error('Groq Reflection Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Coach Reflection Error:", error);
+    return NextResponse.json({ success: false, error: `Neural link offline. Diagnostic: ${error.message}` }, { status: 500 });
   }
 }

@@ -1,17 +1,31 @@
 import { getCourseAnalytics } from '@/app/actions/analytics';
-import { Activity, Flame, Clock } from 'lucide-react';
+import { Activity, Flame, Clock, CalendarDays } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function AnalyticsPage() {
-  const analytics = await getCourseAnalytics();
+export default async function AnalyticsPage({ searchParams }: { searchParams: { days?: string } }) {
+  const days = parseInt(searchParams.days || '90');
+  const analytics = await getCourseAnalytics(days);
 
   return (
     <main className="min-h-screen w-full relative overflow-hidden text-white flex flex-col p-8 lg:p-12 animate-in fade-in duration-700">
-      <header className="border-b border-white/10 pb-6 mb-12">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="h-px w-8 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></span>
-          <p className="text-[10px] font-black tracking-[0.3em] text-indigo-400 uppercase drop-shadow-md">The Analytics Brain</p>
+      <header className="border-b border-white/10 pb-6 mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="h-px w-8 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></span>
+            <p className="text-[10px] font-black tracking-[0.3em] text-indigo-400 uppercase drop-shadow-md">The Analytics Brain</p>
+          </div>
+          <h1 className="text-5xl font-black uppercase tracking-tighter">Course Telemetry</h1>
         </div>
-        <h1 className="text-5xl font-black uppercase tracking-tighter">Course Telemetry</h1>
+        
+        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
+          {[30, 90, 180, 365].map((d) => (
+            <Link key={d} href={`/analytics?days=${d}`}>
+              <button className={`px-4 py-2 rounded text-xs font-bold transition-all ${days === d ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                {d}D
+              </button>
+            </Link>
+          ))}
+        </div>
       </header>
 
       {analytics.length === 0 ? (
@@ -22,7 +36,6 @@ export default async function AnalyticsPage() {
       ) : (
         <div className="flex flex-col gap-12 max-w-7xl w-full">
           {analytics.map((course) => {
-            // Colors can be dynamic, but let's stick to emerald for positive matrix
             return (
               <div key={course.id} className="glass-panel p-8 relative overflow-hidden group border-white/10 hover:border-emerald-500/30 transition-colors">
                 <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-emerald-900/10 to-transparent pointer-events-none"></div>
@@ -38,10 +51,11 @@ export default async function AnalyticsPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <h3 className="text-[10px] font-black tracking-[0.2em] text-gray-500 uppercase mb-4">90-Day Focus Matrix</h3>
+                  <h3 className="text-[10px] font-black tracking-[0.2em] text-gray-500 uppercase mb-4 flex items-center gap-2">
+                    <CalendarDays className="h-3 w-3" /> {days}-Day Focus Matrix
+                  </h3>
                   
-                  {/* GitHub-style matrix. We can wrap it nicely */}
-                  <div className="flex flex-wrap gap-2 w-full">
+                  <div className="flex flex-wrap gap-1.5 md:gap-2 w-full">
                     {course.grid.map((day: any, i: number) => {
                       let bgClass = "bg-white/5 border-white/5";
                       if (day.intensity === 1) bgClass = "bg-emerald-500/20 border-emerald-500/20";
@@ -49,10 +63,13 @@ export default async function AnalyticsPage() {
                       if (day.intensity === 3) bgClass = "bg-emerald-500/70 border-emerald-500/70 shadow-[0_0_15px_rgba(16,185,129,0.5)]";
                       if (day.intensity === 4) bgClass = "bg-emerald-400 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.8)]";
 
+                      // Responsive sizes based on days
+                      const sizeClass = days > 90 ? "h-3 w-3 sm:h-4 sm:w-4" : "h-5 w-5 sm:h-7 sm:w-7";
+
                       return (
                         <div 
                           key={i} 
-                          className={`h-6 w-6 sm:h-8 sm:w-8 shrink-0 rounded border ${bgClass} transition-all duration-300 hover:scale-110 flex items-center justify-center group/tooltip relative cursor-crosshair`}
+                          className={`${sizeClass} shrink-0 rounded-[2px] md:rounded border ${bgClass} transition-all duration-300 hover:scale-125 hover:z-20 flex items-center justify-center group/tooltip relative cursor-crosshair`}
                         >
                           <div className="opacity-0 group-hover/tooltip:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[9px] font-mono py-1 px-3 rounded pointer-events-none whitespace-nowrap z-50 border border-white/10 transition-opacity">
                             {day.date}: {day.minutes > 0 ? `${day.minutes} min` : 'No Activity'}

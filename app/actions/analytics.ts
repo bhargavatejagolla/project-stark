@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 
 const USER_ID = '5ab9ee3e-4bfc-4e51-8935-cbb926668752';
 
-export async function getCourseAnalytics() {
+export async function getCourseAnalytics(days: number = 90) {
   // 1. Fetch all skills
   const { data: skills, error: skillsError } = await supabase
     .from('skills')
@@ -31,16 +31,15 @@ export async function getCourseAnalytics() {
     });
   }
 
-  // 3. Generate 90-day matrix for each skill
-  // A 365-day matrix on a regular screen can be overwhelming, but 90 days fits perfectly in a grid
+  // 3. Generate dynamic matrix for each skill
   const today = new Date();
   
   return skills.map(skill => {
     const skillSessions = sessionsBySkill[skill.id] || [];
     
-    // Create 90 day grid
+    // Create grid based on days param
     const grid = [];
-    for (let i = 89; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];

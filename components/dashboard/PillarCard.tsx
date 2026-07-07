@@ -74,7 +74,7 @@ export function PillarCard({ pillar }: { pillar: any }) {
         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div 
             className={`h-full bg-${color}-500 shadow-[0_0_10px_rgba(var(--${color}-500),0.8)] transition-all duration-1000`}
-            style={{ width: `${pillar.readiness}%` }}
+            style={{ width: `${pillar.hours > 0 ? Math.max(1, pillar.readiness) : 0}%` }}
           ></div>
         </div>
       </div>

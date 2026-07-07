@@ -351,15 +351,21 @@ export async function getFAANGPillars() {
       return [];
     }
 
-    return skills.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      type: s.name, 
-      hours: s.logged_hours || 0,
-      target: s.target_hours || 100,
-      description: `Target: ${s.target_hours || 100} hours`,
-      readiness: Math.min(100, Math.round(((s.logged_hours || 0) / (s.target_hours || 100)) * 100))
-    }));
+    return skills.map((s: any) => {
+      const logged = s.logged_hours || 0;
+      const target = s.target_hours || 100;
+      const rawReadiness = Math.min(100, (logged / target) * 100);
+      
+      return {
+        id: s.id,
+        name: s.name,
+        type: s.name, 
+        hours: logged,
+        target: target,
+        description: `Target: ${target} hours`,
+        readiness: Number(rawReadiness.toFixed(1))
+      };
+    });
   } catch (err) {
     return [];
   }
