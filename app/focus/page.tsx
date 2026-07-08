@@ -14,6 +14,7 @@ function FocusBrainContent() {
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
   
   // Phase 2: Socratic Gateway
   const [isReflecting, setIsReflecting] = useState(false);
@@ -22,13 +23,24 @@ function FocusBrainContent() {
 
   useEffect(() => {
     let interval: any = null;
-    if (isActive) {
+    if (isActive && startTime) {
       interval = setInterval(() => {
-        setElapsedSeconds((time) => time + 1);
+        setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
       }, 1000);
+      
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+        }
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      };
     }
-    return () => clearInterval(interval);
-  }, [isActive]);
+  }, [isActive, startTime]);
 
   const handleEndSession = () => {
     setIsActive(false);
@@ -133,7 +145,10 @@ function FocusBrainContent() {
         <div className="flex items-center justify-center gap-6">
           {!isActive && elapsedSeconds === 0 ? (
             <Button 
-              onClick={() => setIsActive(true)} 
+              onClick={() => {
+                setStartTime(Date.now());
+                setIsActive(true);
+              }} 
               size="lg"
               className="h-20 px-12 rounded-full bg-white text-black hover:bg-emerald-400 hover:text-black font-black tracking-widest text-xl transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]"
             >
