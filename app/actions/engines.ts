@@ -436,3 +436,17 @@ export async function deleteCustomPillar(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath('/career');
 }
+
+export async function getSkillName(id: string) {
+  try {
+    const { data, error } = await supabase
+      .from('skills')
+      .select('name')
+      .eq('id', id)
+      .single();
+    if (error || !data) return null;
+    return data.name;
+  } catch (err) {
+    return null;
+  }
+}

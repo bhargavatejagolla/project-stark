@@ -7,8 +7,9 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function main() {
-  const { data, error } = await supabase.from('skills').update({ logged_hours: 0.3 }).eq('id', 'cc7f0da0-acc1-406f-8c98-59258ea859aa').select();
-  console.log("Update result:", data);
-  console.log("Error:", error);
+  const { data: skills } = await supabase.from('skills').select('*');
+  console.log("Skills Table:", skills);
+  const { data: sessions } = await supabase.from('study_sessions').select('*').order('started_at', { ascending: false }).limit(5);
+  console.log("Sessions Table:", sessions);
 }
 main();

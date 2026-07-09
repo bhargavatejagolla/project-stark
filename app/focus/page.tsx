@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Play, Square, X, Loader2, BrainCircuit, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { logStudySession } from '@/app/actions/tasks';
+import { getSkillName } from '@/app/actions/engines';
 import { toast } from 'sonner';
 
 function FocusBrainContent() {
@@ -16,6 +17,13 @@ function FocusBrainContent() {
   const [isActive, setIsActive] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [accumulatedSeconds, setAccumulatedSeconds] = useState(0);
+  const [skillName, setSkillName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (skillId) {
+      getSkillName(skillId).then(name => setSkillName(name));
+    }
+  }, [skillId]);
   
   // Phase 2: Socratic Gateway
   const [isReflecting, setIsReflecting] = useState(false);
@@ -151,7 +159,9 @@ function FocusBrainContent() {
 
       <div className="text-center space-y-12">
         <div className="space-y-4">
-          <h2 className="text-lg font-bold tracking-[0.2em] text-gray-500 uppercase">Live Focus Engine</h2>
+          <h2 className="text-lg font-bold tracking-[0.2em] text-gray-500 uppercase">
+            {skillName ? `Targeting: ${skillName}` : 'Live Focus Engine'}
+          </h2>
           <p className="text-3xl font-light text-white">
             {isActive ? 'Deep Work Engaged' : (elapsedSeconds > 0 ? 'Session Paused' : 'Awaiting Engagement')}
           </p>
