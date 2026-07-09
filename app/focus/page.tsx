@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Play, Square, X, Loader2, BrainCircuit } from 'lucide-react';
+import { Play, Square, X, Loader2, BrainCircuit, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { logStudySession } from '@/app/actions/tasks';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ function FocusBrainContent() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [accumulatedSeconds, setAccumulatedSeconds] = useState(0);
   
   // Phase 2: Socratic Gateway
   const [isReflecting, setIsReflecting] = useState(false);
@@ -25,12 +26,12 @@ function FocusBrainContent() {
     let interval: any = null;
     if (isActive && startTime) {
       interval = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+        setElapsedSeconds(accumulatedSeconds + Math.floor((Date.now() - startTime) / 1000));
       }, 1000);
       
       const handleVisibilityChange = () => {
-        if (!document.hidden) {
-          setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+        if (!document.hidden && isActive) {
+          setElapsedSeconds(accumulatedSeconds + Math.floor((Date.now() - startTime) / 1000));
         }
       };
       document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -40,7 +41,23 @@ function FocusBrainContent() {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
       };
     }
-  }, [isActive, startTime]);
+  }, [isActive, startTime, accumulatedSeconds]);
+
+  const handlePause = () => {
+    if (startTime) {
+      const currentDelta = Math.floor((Date.now() - startTime) / 1000);
+      const newAccumulated = accumulatedSeconds + currentDelta;
+      setAccumulatedSeconds(newAccumulated);
+      setElapsedSeconds(newAccumulated);
+      setStartTime(null);
+      setIsActive(false);
+    }
+  };
+
+  const handleResume = () => {
+    setStartTime(Date.now());
+    setIsActive(true);
+  };
 
   const handleEndSession = () => {
     setIsActive(false);
@@ -135,14 +152,16 @@ function FocusBrainContent() {
       <div className="text-center space-y-12">
         <div className="space-y-4">
           <h2 className="text-lg font-bold tracking-[0.2em] text-gray-500 uppercase">Live Focus Engine</h2>
-          <p className="text-3xl font-light text-white">{isActive ? 'Deep Work Engaged' : 'Awaiting Engagement'}</p>
+          <p className="text-3xl font-light text-white">
+            {isActive ? 'Deep Work Engaged' : (elapsedSeconds > 0 ? 'Session Paused' : 'Awaiting Engagement')}
+          </p>
         </div>
 
         <div className="text-[10rem] md:text-[14rem] font-black text-white tabular-nums tracking-tighter leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
           {hours > 0 ? `${String(hours).padStart(2, '0')}:` : ''}{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </div>
 
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
           {!isActive && elapsedSeconds === 0 ? (
             <Button 
               onClick={() => {
@@ -155,13 +174,32 @@ function FocusBrainContent() {
               <Play className="h-6 w-6 mr-3 fill-current" /> ENGAGE
             </Button>
           ) : (
-            <Button 
-              onClick={handleEndSession} 
-              size="lg"
-              className="h-20 px-12 rounded-full bg-red-500 text-white hover:bg-red-400 font-black tracking-widest text-xl transition-all shadow-[0_0_40px_rgba(239,68,68,0.3)]"
-            >
-              <Square className="h-6 w-6 mr-3 fill-current" /> END SESSION
-            </Button>
+            <>
+              {isActive ? (
+                <Button 
+                  onClick={handlePause} 
+                  size="lg"
+                  className="h-20 px-12 rounded-full bg-amber-500 text-white hover:bg-amber-400 font-black tracking-widest text-xl transition-all shadow-[0_0_40px_rgba(245,158,11,0.3)]"
+                >
+                  <Pause className="h-6 w-6 mr-3 fill-current" /> PAUSE
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleResume} 
+                  size="lg"
+                  className="h-20 px-12 rounded-full bg-emerald-500 text-white hover:bg-emerald-400 font-black tracking-widest text-xl transition-all shadow-[0_0_40px_rgba(16,185,129,0.3)]"
+                >
+                  <Play className="h-6 w-6 mr-3 fill-current" /> RESUME
+                </Button>
+              )}
+              <Button 
+                onClick={handleEndSession} 
+                size="lg"
+                className="h-20 px-12 rounded-full bg-red-500 text-white hover:bg-red-400 font-black tracking-widest text-xl transition-all shadow-[0_0_40px_rgba(239,68,68,0.3)]"
+              >
+                <Square className="h-6 w-6 mr-3 fill-current" /> END SESSION
+              </Button>
+            </>
           )}
         </div>
       </div>
