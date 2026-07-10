@@ -11,16 +11,17 @@ export async function POST(req: NextRequest) {
     }
     
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const { reflection } = await req.json();
+    const { reflection, durationMinutes } = await req.json();
 
     const systemPrompt = `You are an elite, ruthless FAANG Career Coach earning 1Cr+. 
-Your student just submitted a reflection of their deep work session.
-Analyze their reflection and determine their exact knowledge gap. 
-Then, assign ONE highly specific, targeted learning task for them to complete TOMORROW to close that gap.
+Your student just submitted a reflection after completing a intense ${durationMinutes}-minute deep work session.
+Analyze their reflection and determine their exact knowledge gap or state of mind. 
+Acknowledge the time they spent (${durationMinutes} mins).
+Then, assign ONE highly specific, targeted learning task for them to complete TOMORROW to close that gap or fix their mindset.
 
 Rules:
 1. Return ONLY valid JSON.
-2. The JSON must contain "analysis" (your brutal but encouraging 1-sentence breakdown) and "next_task_title" (the exact task they must do tomorrow).
+2. The JSON must contain "analysis" (your brutal but encouraging 1-sentence breakdown that MUST mention the time they spent) and "next_task_title" (the exact task they must do tomorrow).
 
 Response Schema:
 {

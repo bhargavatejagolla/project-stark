@@ -93,7 +93,7 @@ function FocusBrainContent() {
       const res = await fetch('/api/groq/reflect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reflection }),
+        body: JSON.stringify({ reflection, durationMinutes: minutes }),
       });
       
       const data = await res.json();
@@ -105,7 +105,8 @@ function FocusBrainContent() {
         icon: '👁️',
       });
       
-      router.push('/');
+      // Hard redirect to guarantee immediate navigation and full reload of Mission Control
+      window.location.href = '/';
     } catch (err) {
       toast.error('Failed to log session.');
       setIsSubmitting(false);
